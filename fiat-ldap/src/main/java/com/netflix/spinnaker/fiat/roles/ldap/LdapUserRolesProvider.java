@@ -134,6 +134,7 @@ public class LdapUserRolesProvider implements UserRolesProvider {
 
   @Override
   public Map<String, Collection<Role>> multiLoadRoles(Collection<ExternalUser> users) {
+    ldapTemplate.setIgnorePartialResultException(true);
     if (StringUtils.isEmpty(configProps.getGroupSearchBase())) {
       return new HashMap<>();
     }
@@ -147,7 +148,6 @@ public class LdapUserRolesProvider implements UserRolesProvider {
         users.stream()
             .map(ExternalUser::getId)
             .collect(Collectors.toMap(String::toLowerCase, Function.identity(), (a1, a2) -> a1));
-
     List<Role> roles = ldapTemplate
         .search(
             configProps.getGroupSearchBase(),
@@ -169,6 +169,7 @@ public class LdapUserRolesProvider implements UserRolesProvider {
   }
 
   private String getUserFullDn(String userId) {
+    ldapTemplate.setIgnorePartialResultException(true);
     String rootDn = LdapUtils.parseRootDnFromUrl(configProps.getUrl());
     DistinguishedName root = new DistinguishedName(rootDn);
     log.debug("Root DN: " + root.toString());
