@@ -43,7 +43,8 @@ include 'fiat-api',
         'fiat-google-groups',
         'fiat-ldap',
         'fiat-roles',
-        'fiat-web'
+        'fiat-web',
+        'fiat-ldap-v2'
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"

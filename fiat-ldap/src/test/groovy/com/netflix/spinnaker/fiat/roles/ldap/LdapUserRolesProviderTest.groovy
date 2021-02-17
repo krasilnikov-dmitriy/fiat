@@ -86,61 +86,6 @@ class LdapUserRolesProviderTest extends Specification {
     "notEmpty"     |_
   }
 
-  void "multiLoadRoles should use loadRoles when groupUserAttributes is empty"() {
-    given:
-    def users = [externalUser("user1"), externalUser("user2")]
-    def role1 = new Role("group1")
-    def role2 = new Role("group2")
-
-    def configProps = baseConfigProps()
-    def provider = Spy(LdapUserRolesProvider){
-      loadRoles(_ as ExternalUser) >>> [[role1], [role2]]
-    }.setConfigProps(configProps)
-
-    when:
-    configProps.groupSearchBase = ""
-    def roles = provider.multiLoadRoles(users)
-
-    then:
-    roles == [:]
-
-    when:
-    configProps.groupSearchBase = "notEmpty"
-    roles = provider.multiLoadRoles(users)
-
-    then:
-    roles == [user1: [role1], user2: [role2]]
-  }
-
-  void "multiLoadRoles should use groupUserAttributes when groupUserAttributes is not empty"() {
-    given:
-    def users = [externalUser("user1"), externalUser("user2")]
-    def role1 = new Role("group1")
-    def role2 = new Role("group2")
-
-    def configProps = baseConfigProps().setGroupSearchBase("notEmpty").setGroupUserAttributes("member")
-    def provider = Spy(LdapUserRolesProvider){
-      2 * loadRoles(_) >>> [[role1], [role2]]
-    }.setConfigProps(configProps)
-
-    when: "thresholdToUseGroupMembership is too high"
-    configProps.thresholdToUseGroupMembership = 100
-    def roles = provider.multiLoadRoles(users)
-
-    then: "should use loadRoles"
-    roles == [user1: [role1], user2: [role2]]
-
-    when: "users count is greater than thresholdToUseGroupMembership"
-    configProps.thresholdToUseGroupMembership = 1
-    provider.ldapTemplate = Mock(SpringSecurityLdapTemplate) {
-      1 * search(*_) >> [[Pair.of("user1",role1)], [Pair.of("user2", role2)], [Pair.of("unknown", role2)]]
-    }
-    roles = provider.multiLoadRoles(users)
-
-    then: "should use ldapTemplate.search method"
-    roles == [user1: [role1], user2: [role2]]
-  }
-
   private static ExternalUser externalUser(String id) {
     return new ExternalUser().setId(id)
   }
